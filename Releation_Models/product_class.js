@@ -7,7 +7,7 @@ Product_class.belongsTo(Product, {
 })
 
 Product_class.belongsToMany(Properties,{
-    through: "productclass_property",
+    through: "productclass_propertyval",
     foreignKey: "productClassId",
-    otherKey: "propertiesId"
+    otherKey: "propValId"
 })

@@ -15,6 +15,7 @@ const Categories = sequelize_mysql.define("categories", {
         allowNull: false
     }
 },{
+    freezeTableName: true,
     tableName: "categories",
     createdAt: "create_at",
     updatedAt: "update_at",

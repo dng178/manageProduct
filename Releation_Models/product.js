@@ -11,6 +11,7 @@ Product.belongsTo(Trademark, {
 Product.belongsToMany(Categories, {
     through: "pro_cat",
     foreignKe: "productId",
+    as: "categories",
     otherKey: "categoriesId"
 })
 

@@ -3,6 +3,7 @@ const Product = require("../Models/product")
 
 Categories.belongsToMany(Product, {
     through: "pro_cat",
-    foreignKe: "categoriesId",
+    foreignKey: "categoriesId",
+    as: "product",
     otherKey: "productId"
 })

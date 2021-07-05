@@ -5,7 +5,7 @@ class propertyValController {
     constructor() {
     }
 
-    async get(req, res) {
+    async getAllProperty(req, res) {
         try {
             let property_val = await Properties_Value.findAll({
 

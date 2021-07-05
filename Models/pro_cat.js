@@ -12,6 +12,7 @@ const ProCat = sequelize_mysql.define("pro_cat", {
     }
 
 },{
+    freezeTableName: true,
     tableName: "pro_cat",
     createdAt: "create_at",
     updatedAt: "update_at",

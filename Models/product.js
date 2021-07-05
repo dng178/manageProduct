@@ -4,7 +4,8 @@ const sequelize_mysql = require("../Connection/sequelize_mysql")
 const Product = sequelize_mysql.define("product", {
     title:{
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
+
     },
     UPC: {
         type: DataTypes.UUID,
@@ -34,6 +35,7 @@ const Product = sequelize_mysql.define("product", {
     }
 
 },{
+    freezeTableName: true,
     tableName: "product",
     createdAt: "create_at",
     updatedAt: "update_at",

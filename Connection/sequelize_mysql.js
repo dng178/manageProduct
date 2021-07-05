@@ -4,6 +4,7 @@ const sequelize = new Sequelize('manage_product', 'root', 'password', {
     host: 'localhost',
     dialect: "mysql",
     // logging: false,
+    // freezeTableName: true,
     pool: {
         max: 5,
         min: 0,
