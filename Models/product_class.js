@@ -1,7 +1,6 @@
 const {Sequelize, DataTypes} = require("sequelize");
 const sequelize_mysql = require("../Connection/sequelize_mysql")
 // const sequelize = require('sequelize-virtual-fields')();
-const Product = require('./product')
 
 const Product_class = sequelize_mysql.define("product_class", {
     SKU: {
@@ -24,15 +23,27 @@ const Product_class = sequelize_mysql.define("product_class", {
     },
     productTitle: {
         type: DataTypes.VIRTUAL(),
-        // get() {
-        //     return Product?.get().title;
-        // },
-        references: {
-            model: Product,
-            key: "id",
-            attributes:['title']
+        get() {
+            let result = this.product.title;
+            this.setDataValue("product", undefined)
+            return result;
+        },
+    },
+    category:{
+        type: DataTypes.VIRTUAL(),
+        get(){
+            let category = this.product.categories;
+            // this.setDataValue("categories", this)
+            return category;
         }
-    }
+    },
+    // trademarkCountry:{
+    //     type: DataTypes.VIRTUAL(),
+    //     get() {
+    //         let result = this.product.trademark.country;
+    //         return result;
+    //     }
+    // }
 },{
     tableName: "product_class",
     createdAt: "create_at",

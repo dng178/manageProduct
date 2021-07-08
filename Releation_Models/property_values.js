@@ -1,5 +1,5 @@
-const Property_values = require("../Models/properties")
-const Properties = require("../Models/property_values")
+const Property_values = require("../Models/property_values")
+const Properties = require("../Models/properties")
 
 Property_values.belongsTo(Properties,{
     foreignKey: "propertiesId"

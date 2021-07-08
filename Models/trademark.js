@@ -14,6 +14,7 @@ const Trademark = sequelize_mysql.define("trademark", {
         type: DataTypes.STRING
     }
 },{
+    freezeTableName: true,
     tableName: "trademark",
     createdAt: "create_at",
     updatedAt: "update_at",

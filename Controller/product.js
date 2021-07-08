@@ -3,27 +3,33 @@ const Product_class = require("../Models/product_class")
 const Property_value = require("../Models/property_values")
 const Categories = require("../Models/categories")
 const Trademark = require("../Models/trademark")
-    const { Op } = require("sequelize");
+const {Op} = require("sequelize");
+const {Sequelize} = require("sequelize");
 
 class productController {
-    constructor() {}
+    constructor() {
+    }
 
-//get all and count product with clothes category
-    async get(req, res) {
+//get all and count product with clothes category and with properties values
+    async getCount(req, res) {
         try {
             let product = await Product.findAndCountAll({
-                attributes:["id", "title", "UPC","shortDescription","detailDescription", "displayStatus"],
-                include:{
+                attributes: {exclude: ['create_at', 'update_at']},
+                distinct: true,
+                include: [{
                     model: Categories,
-                    attributes:["name", "picture", "detail_description"],
-                    through: { attributes: [] },
-                    where:{
-                        name: "Clothes"
-                    },
+                    as: 'categories',
+                    attributes: {exclude: ['create_at', 'update_at']},
+                    through: {attributes: []},
+                    where: [{
+                        [Op.or]: [
+                            {id: req.body.category_id},
+                        ]
+                    }],
                     required: true,
-                }
+                },
+                ],
             })
-
             return res.json({
                 status: true,
                 message: "success",
@@ -38,85 +44,27 @@ class productController {
         }
     }
 
-    // //get all product from VN
-    // async getVietNamProduct(req, res) {
-    //     try {
-    //         let product = await Product.findAll({
-    //             attributes:["id", "title", "UPC","shortDescription","detailDescription", "displayStatus"],
-    //             include:{
-    //                 model: Trademark,
-    //                 attributes:["name", "country", "logo"],
-    //                 where:{
-    //                     country: "Vietnamese"
-    //                 },
-    //                 required: true,
-    //             }
-    //         })
-    //
-    //         return res.json({
-    //             status: true,
-    //             message: "Success",
-    //             data: product
-    //         });
-    //     } catch (err) {
-    //         return res.json({
-    //             exception: err.message
-    //         })
-    //     }
-    // }
-    //
-    // //get all product with clothes and makeup category
-    // async getClotheMakeup(req, res) {
-    //     try {
-    //         let product = await Product.findAndCountAll({
-    //
-    //             attributes:["id", "title", "UPC","shortDescription","detailDescription", "displayStatus"],
-    //             include:[{
-    //                 model: Categories,
-    //                 attributes:["name", "picture", "detail_description"],
-    //                 through: { attributes: [] },
-    //                 where:{
-    //                     name: {
-    //                         // [Op.or]: ["Clothes", "Makeup"]
-    //                     }
-    //                     [Op.or]:[
-    //                         {name: "Clothes"},
-    //                         {name: "Makeup"}
-    //                     ]
-    //                 },
-    //                 required: true,
-    //             }]
-    //
-    //         })
-    //
-    //         return res.json({
-    //             status: true,
-    //             message: "Success",
-    //             data: product
-    //         });
-    //     } catch (err) {
-    //         return res.json({
-    //             status: false,
-    //             message: "Exception",
-    //             exception: err.message
-    //         })
-    //     }
-    // }
-
-//get all and count product with clothes category
+//get all and count product with properties values
     async getAll(req, res) {
         try {
             let product = await Product.findAll({
-                include:{
+                as: "product",
+                attributes: {
+                    exclude: ['create_at', 'update_at'],
+                },
+                include: [{
                     model: Product_class,
-                    include:{
+                    attributes: {
+                        exclude: ['create_at', 'update_at', 'productTitle', 'category'],
+                    },
+                    include: [{
                         model: Property_value,
-                        where:{
-                            id:{[Op.not]: null}
+                        attributes: {
+                            exclude: ['create_at', 'update_at'],
                         },
-                        through:{attributes:[]}
-                    }
-                }
+                        through: {attributes: []}
+                    }]
+                }]
             })
 
             return res.json({
@@ -132,7 +80,6 @@ class productController {
             })
         }
     }
-
 
 
 //create product
@@ -160,5 +107,38 @@ class productController {
             })
         }
     }
+
+    //get all and count product with clothes category and with properties values
+    async findbyId(req, res) {
+        try {
+            let product = await Product.findByPk(req.params.id, {
+
+                attributes: {exclude: ['create_at', 'update_at']},
+                include: [{
+                    model: Categories,
+                    as: "categories",
+                    through: {attributes: []}
+                }, {
+                    model: Trademark,
+                }, {
+                    model: Product_class,
+                    attributes: {exclude: ['create_at', 'update_at', 'categoryName', 'productTitle']}
+                }]
+            })
+            return res.json({
+                status: true,
+                message: "success",
+                data: product
+            });
+        } catch (err) {
+            return res.json({
+                status: false,
+                message: "Exception",
+                exception: err.message
+            })
+        }
+    }
 }
+
+
 module.exports = productController

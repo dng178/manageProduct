@@ -1,6 +1,6 @@
 const Categories = require("../Models/categories")
 const Product = require("../Models/product")
-const { Op } = require("sequelize");
+const {Op} = require("sequelize");
 
 class categoriesController {
     constructor() {
@@ -8,21 +8,20 @@ class categoriesController {
 
     //C3
     //get all product in category clothes and makeup
-    async getAllCategories(req, res) {
+    async getCategories(req, res) {
         try {
             let categories = await Categories.findAll({
-                attributes:["id", "name", "detail_description"],
-                    include:{
+                attributes: {exclude: ['create_at', 'update_at']},
+                include: [
+                    {
                         model: Product,
+                        attributes: {exclude: ['create_at', 'update_at']},
+                        through: {attributes: []},
                         as: "product",
-
-                        through:{attributes:['categoriesId']},
-                        required: true,
-                    },
-                where:{
-                        name: {
-                            [Op.or]: ["Clothes", "Makeup"]
-                        }
+                    }
+                ],
+                where: {
+                    id: req.body.category_id
                 },
 
             })
@@ -62,4 +61,5 @@ class categoriesController {
         }
     }
 }
+
 module.exports = categoriesController

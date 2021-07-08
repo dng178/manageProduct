@@ -5,7 +5,6 @@ const Product = sequelize_mysql.define("product", {
     title:{
         type: DataTypes.STRING,
         allowNull: false,
-
     },
     UPC: {
         type: DataTypes.UUID,

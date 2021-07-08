@@ -12,6 +12,6 @@ const Propeties = sequelize_mysql.define("properties", {
     createdAt: "create_at",
     updatedAt: "update_at",
 })
-// Propeties.sync({force: true})
+// Propeties.sync({alter: true})
 module.exports = Propeties
 require("../Releation_Models/properties")
