@@ -1,6 +1,9 @@
 const Categories = require("../Models/categories")
 const Product = require("../Models/product")
+const Product_class = require("../Models/product_class")
+const sequelize = require("../Connection/sequelize_mysql");
 const {Op} = require("sequelize");
+const {Sequelize, QueryTypes} = require("sequelize");
 
 class categoriesController {
     constructor() {
@@ -25,6 +28,40 @@ class categoriesController {
                 },
 
             })
+
+            return res.json({
+                status: true,
+                message: "Success",
+                data: categories
+            })
+        } catch (err) {
+            return res.json({
+                status: false,
+                message: "Exception",
+                exception: err.message
+            })
+        }
+    }
+
+    //C11
+    //get category list and total sum product and sum product class
+    async getTotal(req, res) {
+        try {
+            let categories = await Categories.findAll({
+                as:"categories",
+                include: [
+                    {
+                        model: Product,
+                        through:{attributes:[]},
+                        as: "product",
+                        include:[{
+                            model:Product_class,
+                            attributes: {exclude: ['create_at', 'update_at']},
+                        }]
+                    }
+                ],
+            })
+
 
             return res.json({
                 status: true,

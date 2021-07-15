@@ -16,7 +16,8 @@ Product.belongsToMany(Categories, {
 })
 
 Product.hasMany(Product_class, {
-    foreignKey: "productId"
+    foreignKey: "productId",
+    // as: "productClass"
 })
 
 // Product.hasMany(ProductClass_PropertyVal, {

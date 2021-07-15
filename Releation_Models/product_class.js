@@ -3,7 +3,8 @@ const Product = require("../Models/product")
 const Properties = require("../Models/property_values")
 
 Product_class.belongsTo(Product, {
-    foreignKey: "productId"
+    foreignKey: "productId",
+    // as: "productClass"
 })
 
 Product_class.belongsToMany(Properties,{

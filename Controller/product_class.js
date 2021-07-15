@@ -23,6 +23,7 @@ class proClassController {
                 attributes: {
                     exclude: ['create_at', 'update_at'],
                 },
+                // as: "productClass",
                 include: [
                     {
                         model: Product,
@@ -193,7 +194,7 @@ class proClassController {
                             as: "categories",
                             through: {attributes: []},
                             where: {
-                                id: { [Op.in]: req.body.category_id}
+                                id: {[Op.in]: req.body.category_id},
                             },
 
                         }],
@@ -264,6 +265,7 @@ class proClassController {
     async post(req, res) {
         try {
             let product_class = await Product_Class.create({
+                id: req.body.id,
                 SKU: req.body.SKU,
                 productId: req.body.productId,
                 propertiesId: req.body.propertiesId,
@@ -283,6 +285,325 @@ class proClassController {
             })
         }
     }
+
+    //c7
+    //raw query
+    //get all and count product
+    async getCountProductRaw(req, res) {
+        try {
+            // let product = await Product_Class.findAndCountAll({
+            // attributes: {
+            //     exclude: ['create_at', 'update_at'],
+            // },
+            // distinct: true,
+            // include: [
+            //     {
+            //         model: Product,
+            //         as: "product",
+            //         include: [{
+            //             model: Categories,
+            //             as: "categories",
+            //             // attributes:{exclude:['product_Total','product_Class_Total'], include:['id', 'name', 'picture', 'detail_description']},
+            //             attributes: {
+            //                 include:[[Sequelize.literal('SELECT pc.id\n' +
+            //                     'FROM product_class AS pc \n' +
+            //                     'inner JOIN \n' +
+            //                     'product AS p ON pc.productId = p.id \n' +
+            //                     'inner JOIN ( pro_cat AS pcat\n' +
+            //                     'inner JOIN categories AS c \n' +
+            //                     'ON c.id = pcat.categoriesId) \n' +
+            //                     'ON p.id = pcat.productId and ( c.id = 1 or c.id = 3)'), 'pc.id']]
+            //             },
+            //             through: {attributes: []},
+            //
+            //         }],
+            //     }
+            // ],
+            // where: {
+            //     displayStatus: req.body.displayStatus,
+            // },
+            let product_class = await sequelize.query("SELECT p.*, c.*, pc.*\n" +
+                "FROM product_class AS pc \n" +
+                "inner JOIN \n" +
+                "product AS p ON pc.productId = p.id \n" +
+                "inner JOIN ( pro_cat AS pcat\n" +
+                "inner JOIN categories AS c \n" +
+                "ON c.id = pcat.categoriesId) \n" +
+                "ON p.id = pcat.productId\n" +
+                "WHERE pc.displayStatus = :displayStatus  and pc.id in (SELECT product_class.id\n" +
+                "FROM product_class  \n" +
+                "inner JOIN \n" +
+                "product  ON product_class.productId = product.id \n" +
+                "inner JOIN ( pro_cat \n" +
+                "inner JOIN categories \n" +
+                "ON categories.id = pro_cat.categoriesId) \n" +
+                "ON product.id = pro_cat.productId and ( categories.id in (:id)));", {
+                type: QueryTypes.SELECT,
+                replacements: {
+                    displayStatus: req.body.displayStatus,
+                    id: req.body.category_id
+                }
+
+            })
+            return res.json({
+                status: true,
+                message: "Success",
+                data: product_class
+            });
+        } catch (err) {
+            return res.json({
+                status: false,
+                message: "Exception",
+                exception: err.message
+            })
+        }
+    }
+
+    async getCountProduct(req, res) {
+        try {
+            let getCategory = await Product_Class.findAll({
+                attributes: ["id"],
+                include: [{
+                    model: Product,
+                    as: "product",
+                    required: true,
+                    attributes: {exclude: ['title', 'UPC', 'trademarkId', 'image', 'shortDescription', 'detailDescription', 'displayStatus', 'create_at', 'update_at']},
+                    include: [{
+                        model: Categories,
+                        as: "categories",
+                        attributes: {exclude: ['product_total', 'product_class_total', 'picture', 'detail_description', 'create_at', 'update_at']},
+                        through: {attributes: []},
+                        where: {
+                            id: req.body.category_id
+                        }
+                    }],
+                }]
+            })
+
+            var result = getCategory.map(x => x.id)
+            console.log(result)
+            let product_class = await Product_Class.findAndCountAll({
+                distinct: true,
+                include: [{
+                    model: Product,
+                    as: "product",
+                    include: [{
+                        model: Categories,
+                        as: "categories",
+                        attributes: {exclude: ['product_total', 'product_class_total']},
+                        through: {attributes: []},
+                    }],
+                    where: {
+                        displayStatus: req.body.displayStatus
+                    }
+                }],
+                where: {
+                    id: {[Op.in]: result}
+                }
+            });
+            return res.json({
+                status: true,
+                message: "Success",
+                data: [product_class]
+            });
+        } catch (err) {
+            return res.json({
+                status: false,
+                message: "Exception",
+                exception: err.message
+            })
+        }
+    }
+
+    //c8
+
+    async getPage(req, res) {
+        try {
+            let page = parseInt(req.query.page);
+            let limit = parseInt(req.query.limit);
+            const offset = page  ? (page-1) * limit : 0;
+            let product = Product_Class.findAndCountAll({limit: limit, offset: offset})
+                .then(data => {
+                    const response = {
+                        message: "page = " + page + ", limit = " + limit,
+                        data: {
+                            "totalItems": data.count,
+                            "totalPages": Math.ceil(data.count / limit),
+                            "limit": limit,
+                            "offset": offset,
+                            "currentPageNumber": page,
+                            "currentPageSize": data.rows.length,
+                            "Product": data.rows,
+
+                        }
+                    };
+                    res.send(response);
+                });
+        } catch (err) {
+            return res.json({
+                status: false,
+                message: "Exception",
+                exception: err.message
+            })
+        }
+    }
+
+    //c9
+    async getProductClassPage(req, res) {
+        try {
+            let page = parseInt(req.query.page);
+            let limit = parseInt(req.query.limit);
+            const offset = page  ? (page -1) * limit : 0;
+            let getCategory = await Product_Class.findAll({
+                attributes: ["id"],
+                include: [{
+                    model: Product,
+                    as: "product",
+                    required: true,
+                    attributes: {exclude: ['title', 'UPC', 'trademarkId', 'image', 'shortDescription', 'detailDescription', 'displayStatus', 'create_at', 'update_at']},
+                    include: [{
+                        model: Categories,
+                        as: "categories",
+                        attributes: {exclude: ['product_total', 'product_class_total', 'picture', 'detail_description', 'create_at', 'update_at']},
+                        through: {attributes: []},
+                        where: {
+                            id: req.body.category_id
+                        }
+                    }],
+                }]
+            })
+
+            var result = getCategory.map(x => x.id)
+            console.log(result)
+            let product_class = await Product_Class.findAndCountAll({
+                limit:limit,
+                offset: offset,
+                distinct: true,
+                include: [{
+                    model: Product,
+                    as: "product",
+                    include: [{
+                        model: Categories,
+                        as: "categories",
+                        attributes: {exclude: ['product_total', 'product_class_total']},
+                        through: {attributes: []},
+                    }],
+                    where: {
+                        displayStatus: req.body.displayStatus
+                    }
+                }],
+                where: {
+                    id: {[Op.in]: result}
+                }
+            }).then(data => {
+                    const response = {
+                        message: "page = " + page + ", limit = " + limit,
+                        data: {
+                            "totalItems": data.count,
+                            "totalPages": Math.ceil(data.count / limit),
+                            "limit": limit,
+                            "offset": offset,
+                            "currentPageNumber": page ,
+                            "currentPageSize": data.rows.length,
+                            "Product": data.rows,
+
+                        }
+                    };
+                    res.send(response);
+                });
+        } catch (err) {
+            return res.json({
+                status: false,
+                message: "Exception",
+                exception: err.message
+            })
+        }
+    }
+
+    //C10
+    async createBulk(req, res) {
+        try {
+            let product_class = await Product_Class.bulkCreate([{
+                id: req.body.product_class[0].id,
+                productId: req.body.product_class[0].productId,
+                price: req.body.product_class[0].price,
+                displayStatus: req.body.product_class[0].displayStatus
+            },
+                {
+                    id: req.body.product_class[1].id,
+                    productId: req.body.product_class[1].productId,
+                    price: req.body.product_class[1].price,
+                    displayStatus: req.body.product_class[1].displayStatus
+                },
+                {
+                    id: req.body.product_class[2].id,
+                    productId: req.body.product_class[2].productId,
+                    price: req.body.product_class[2].price,
+                    displayStatus: req.body.product_class[2].displayStatus
+                }
+            ])
+            return res.json({
+                status: true,
+                message: "Success",
+                data: product_class
+            })
+        } catch (err) {
+            return res.json({
+                status: false,
+                message: "Exception",
+                exception: err.message
+            })
+        }
+    }
+
+    //c12
+    async updateProductClass(req, res) {
+        const t = await sequelize.transaction();
+        try {
+            let product_class = await Product_Class.update({
+                price: req.body.price,
+                displayStatus: req.body.displayStatus
+            }, {
+                where: {
+                    id: req.body.class_id
+                }
+            }, {transaction: t});
+
+            let product = Product_Class.findAll({where: {productId: req.body.product_id}})
+                .then(pro => {
+                    const isHidden = (status) => status.displayStatus == "hidden";
+                    const isAvailable = (status) => status.displayStatus == "available";
+                    console.log(pro.every(isHidden))
+                    console.log(pro.every(isAvailable))
+                    if (pro.every(isHidden) == true) {
+                        Product.update({
+                            displayStatus: "hidden"
+                        }, {where: {id: req.body.product_id}})
+                    } else if (pro.every(isAvailable) == true) {
+                        Product.update({
+                            displayStatus: "available"
+                        }, {where: {id: req.body.product_id}})
+                    }
+                }, {transaction: t});
+            t.commit();
+            return res.json({
+
+                status: true,
+                message: "Success",
+                data: [product_class]
+            })
+        } catch (err) {
+            await t.rollback();
+            return res.json({
+                status: false,
+                message: "Exception",
+                exception: err.message
+            })
+        }
+    }
+
+
 }
+
 
 module.exports = proClassController

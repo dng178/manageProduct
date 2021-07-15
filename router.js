@@ -37,6 +37,11 @@ function setRoute(app) {
         categoriesController.getCategories(req, res)
     })
 
+    //c11
+    app.get("/categories/total", function (req, res) {
+        categoriesController.getTotal(req, res)
+    })
+
     app.post("/categories/create", function (req, res) {
         categoriesController.post(req, res)
     })
@@ -77,6 +82,8 @@ function setRoute(app) {
         proClassController.post(req, res)
     })
 
+
+
     //C4 raw query
     app.get("/product_class/sub", function (req, res) {
         proClassController.getAllProductClassCategoryTitle(req, res)
@@ -87,11 +94,35 @@ function setRoute(app) {
         proClassController.getCountCategory(req, res)
     })
 
+    //c7
+    //count product
+    app.get("/product_class/product", function (req, res) {
+        proClassController.getCountProduct(req, res)
+    })
+
     //count product class with category makeup and from korea
     app.get("/product_class/count", function (req, res) {
         proClassController.getCount(req, res)
     })
 
+    //c8
+    app.get("/product_class/page_class", function (req, res) {
+        proClassController.getPage(req, res)
+    })
+
+    app.get("/product_class/page", function (req, res) {
+        proClassController.getProductClassPage(req, res)
+    })
+
+    //c10
+    app.post("/product_class/create_bulk", function (req, res) {
+        proClassController.createBulk(req, res)
+    })
+
+    //c12
+    app.put("/product_class/update", function (req, res) {
+        proClassController.updateProductClass(req, res)
+    })
 }
 
 module.exports = setRoute

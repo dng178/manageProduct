@@ -21,22 +21,18 @@ const Product_class = sequelize_mysql.define("product_class", {
         type: DataTypes.STRING,
         allowNull: false
     },
-    productTitle: {
-        type: DataTypes.VIRTUAL(),
-        get() {
-            let result = this.product.title;
-            this.setDataValue("product", undefined)
-            return result;
-        },
-    },
-    category:{
-        type: DataTypes.VIRTUAL(),
-        get(){
-            let category = this.product.categories;
-            // this.setDataValue("categories", this)
-            return category;
-        }
-    },
+
+    // productTitle: {
+    //     type: DataTypes.VIRTUAL(),
+    //     get() {
+    //         let result = this.product.title;
+    //         this.setDataValue("product", undefined)
+    //         return result;
+    //     },
+    // },
+
+
+
     // trademarkCountry:{
     //     type: DataTypes.VIRTUAL(),
     //     get() {

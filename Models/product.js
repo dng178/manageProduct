@@ -31,7 +31,15 @@ const Product = sequelize_mysql.define("product", {
     displayStatus:{
         type: DataTypes.STRING,
         allowNull: false
-    }
+    },
+    // category:{
+    //     type: DataTypes.VIRTUAL(),
+    //     get() {
+    //         let result = this.categories
+    //         // this.setDataValue("categories", undefined)
+    //         return result;
+    //     },
+    // },
 
 },{
     freezeTableName: true,

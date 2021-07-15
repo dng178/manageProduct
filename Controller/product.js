@@ -87,7 +87,7 @@ class productController {
         try {
             let product = await Product.create({
                 title: req.body.title,
-                UPC: req.body.UPC,
+                // UPC: req.body.UPC,
                 trademarkId: req.body.trademarkId,
                 image: req.body.image,
                 shortDescription: req.body.shortDescription,
