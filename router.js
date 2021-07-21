@@ -70,9 +70,9 @@ function setRoute(app) {
         proClassController.getAll(req, res)
     })
 
-    app.get("/product_class", function (req, res) {
-        proClassController.getAllProductClass(req, res)
-    })
+    // app.get("/product_class", function (req, res) {
+    //     proClassController.getAllProductClass(req, res)
+    // })
 
     app.get("/product_class/property", function (req, res) {
         proClassController.getAllProductClassProperty(req, res)
@@ -106,7 +106,7 @@ function setRoute(app) {
     })
 
     //c8
-    app.get("/product_class/page_class", function (req, res) {
+    app.get("/product_class", function (req, res) {
         proClassController.getPage(req, res)
     })
 
@@ -122,6 +122,11 @@ function setRoute(app) {
     //c12
     app.put("/product_class/update", function (req, res) {
         proClassController.updateProductClass(req, res)
+    })
+
+    //c13
+    app.get("/product_class/search", function (req, res) {
+        proClassController.getSearch(req, res)
     })
 }
 

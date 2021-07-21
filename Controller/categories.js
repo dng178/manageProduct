@@ -1,6 +1,8 @@
 const Categories = require("../Models/categories")
 const Product = require("../Models/product")
 const Product_class = require("../Models/product_class")
+const Properties_value = require("../Models/property_values")
+const Properties = require("../Models/properties")
 const sequelize = require("../Connection/sequelize_mysql");
 const {Op} = require("sequelize");
 const {Sequelize, QueryTypes} = require("sequelize");
@@ -48,7 +50,7 @@ class categoriesController {
     async getTotal(req, res) {
         try {
             let categories = await Categories.findAll({
-                as:"categories",
+                // as:"categories",
                 include: [
                     {
                         model: Product,
@@ -57,6 +59,16 @@ class categoriesController {
                         include:[{
                             model:Product_class,
                             attributes: {exclude: ['create_at', 'update_at']},
+                            include:[{
+                                model: Properties_value,
+                                attributes: {exclude: ['create_at', 'update_at']},
+                                through: {attributes:[]},
+                                include:[{
+                                    model: Properties,
+                                    attributes: {exclude: ['create_at', 'update_at']},
+                                }]
+
+                            }]
                         }]
                     }
                 ],
