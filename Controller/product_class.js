@@ -455,31 +455,21 @@ class proClassController {
     //         const offset = page ? (page - 1) * limit : 0;
     //         const id = req.body.category_id;
     //         const displayStatus = req.body.displayStatus;
-    //         // let getCategory = await Product_Class.findAndCountAll({
-    //         //
-    //         //     attributes: ["id"],
-    //         //     include: [{
-    //         //         model: Product,
-    //         //         as: "product",
-    //         //         required: true,
-    //         //         attributes: ['id'],
-    //         //         include: [{
-    //         //             model: Categories,
-    //         //             as: "categories",
-    //         //             attributes: ['id'],
-    //         //             through: {attributes: []},
-    //         //         }],
-    //         //     }],
-    //         //     replacements:[id, displayStatus],
-    //         //
-    //         //     where: {
-    //         //         [Op.in]: Sequelize.literal('exists (SELECT product_class.id\n' +
-    //         //             'FROM pro_cat as pcat \n' +
-    //         //             'inner JOIN \n' +
-    //         //             'categories as c ON pcat.categoriesId = c.id  where\n' +
-    //         //             'product.id = pcat.productId and ( c.id in (?)) and product_class.displayStatus = ?)')
-    //         //     }
-    //         // })
+    //         let getCategory = await Product_Class.findAndCountAll({
+    //             attributes: ["id"],
+    //             include: [{
+    //                 model: Product,
+    //                 as: "product",
+    //                 required: true,
+    //                 attributes: ['id'],
+    //                 include: [{
+    //                     model: Categories,
+    //                     as: "categories",
+    //                     attributes: ['id'],
+    //                     through: {attributes: []},
+    //                 }],
+    //             }],
+    //         })
     //
     //         let product_class = await Product_Class.findAndCountAll({
     //             distinct: true,
@@ -498,7 +488,7 @@ class proClassController {
     //             replacements: [id, displayStatus],
     //
     //             where: {
-    //                 [Op.in]: Sequelize.literal('exists (SELECT product_class.id\n' +
+    //                 [Op.and]: Sequelize.literal('exists (SELECT product_class.id\n' +
     //                     'FROM pro_cat as pcat \n' +
     //                     'inner JOIN \n' +
     //                     'categories as c ON pcat.categoriesId = c.id  where\n' +
@@ -514,7 +504,7 @@ class proClassController {
     //                     "offset": offset,
     //                     "currentPageNumber": page,
     //                     "currentPageSize": data.rows.length,
-    //                     "Product": data.rows,
+    //                     "product_class": data.rows,
     //
     //                 }
     //             };
@@ -535,23 +525,31 @@ class proClassController {
             let limit = parseInt(req.query.limit);
             const offset = page ? (page - 1) * limit : 0;
             const id = req.body.category_id;
-            const displayStatus = req.body.displayStatus;
-            let getCategory = await Product_Class.findAndCountAll({
-                attributes: ["id"],
+            // const displayStatus = req.body.displayStatus;
+            let getCategory = await Product_Class.findAll({
                 include: [{
                     model: Product,
                     as: "product",
                     required: true,
-                    attributes: ['id'],
                     include: [{
                         model: Categories,
                         as: "categories",
-                        attributes: ['id'],
                         through: {attributes: []},
                     }],
                 }],
+                replacements: [id],
+                where: [{
+                    [Op.in]: Sequelize.literal('exists (SELECT product_class.id\n' +
+                        'FROM pro_cat as pcat \n' +
+                        'inner JOIN \n' +
+                        'categories as c ON pcat.categoriesId = c.id  where\n' +
+                        'product.id = pcat.productId and ( c.id in (?)))')
+                },{
+                    displayStatus: req.body.displayStatus
+                }
+                ]
             })
-
+            var result =  Object.keys(getCategory).map(k => getCategory[k].id)
             let product_class = await Product_Class.findAndCountAll({
                 distinct: true,
                 limit: limit,
@@ -566,15 +564,10 @@ class proClassController {
                         through: {attributes: []},
                     }],
                 }],
-                replacements: [id, displayStatus],
-
-                where: {
-                    [Op.and]: Sequelize.literal('exists (SELECT product_class.id\n' +
-                        'FROM pro_cat as pcat \n' +
-                        'inner JOIN \n' +
-                        'categories as c ON pcat.categoriesId = c.id  where\n' +
-                        'product.id = pcat.productId and ( c.id in (?)) and product_class.displayStatus = ?)')
+                where:{
+                    id: {[Op.in]: result}
                 }
+
             }).then(data => {
                 const response = {
                     message: "page = " + page + ", limit = " + limit,
