@@ -3,8 +3,12 @@ const Product_class = require("../Models/product_class")
 const Property_value = require("../Models/property_values")
 const Categories = require("../Models/categories")
 const Trademark = require("../Models/trademark")
+const Properties = require("../Models/properties")
+const ProductClass_PropertyVal = require("../Models/productClass_propertyVal")
 const {Op} = require("sequelize");
 const {Sequelize} = require("sequelize");
+const sequelize = require("../Connection/sequelize_mysql");
+const Product_Class = require("../Models/product_class");
 
 class productController {
     constructor() {
@@ -44,10 +48,27 @@ class productController {
         }
     }
 
+    //c18
 //get all and count product with properties values
     async getAll(req, res) {
         try {
-            let product = await Product.findAll({
+            let body = req.body;
+            let product_classId = body.product_classId
+            if (!product_classId) {
+                return res.json({
+                    status: 0,
+                    message: "class_id invalid",
+                    error_code: 1
+                })
+            }
+            if (isNaN(product_classId)) {
+                return res.json({
+                    status: 0,
+                    message: "product class id must be an number",
+                    error_code: 2
+                })
+            }
+            let product = await Product.findOne({
                 as: "product",
                 attributes: {
                     exclude: ['create_at', 'update_at'],
@@ -60,13 +81,29 @@ class productController {
                     include: [{
                         model: Property_value,
                         attributes: {
-                            exclude: ['create_at', 'update_at'],
+                            exclude: ['create_at', 'update_at', 'propertiesId'],
                         },
-                        through: {attributes: []}
-                    }]
+                        through: {attributes: []},
+                        include:[{
+                            model: Properties,
+                            attributes: {
+                                exclude: ['create_at', 'update_at'],
+                            },
+                        }]
+                    }],
+                    where:{
+                        id: product_classId
+                    }
                 }]
             })
 
+            if (!product) {
+                return res.json({
+                    status: 0,
+                    message: "product class not found",
+                    error_code: 3
+                })
+            }
             return res.json({
                 status: true,
                 message: "success",
@@ -108,6 +145,7 @@ class productController {
         }
     }
 
+    //c16
     //get all and count product with clothes category and with properties values
     async findbyId(req, res) {
         try {
@@ -122,8 +160,21 @@ class productController {
                     model: Trademark,
                 }, {
                     model: Product_class,
-                    attributes: {exclude: ['create_at', 'update_at', 'categoryName', 'productTitle']}
-                }]
+                    attributes: {exclude: ['create_at', 'update_at', 'categoryName', 'productTitle']},
+                    include: [{
+                        model: Property_value,
+                        attributes: {
+                            exclude: ['create_at', 'update_at', 'propertiesId'],
+                        },
+                        through: {attributes: []},
+                        include:[{
+                            model: Properties,
+                            attributes: {
+                                exclude: ['create_at', 'update_at'],
+                            },
+                        }]
+                    }],
+                }],
             })
             return res.json({
                 status: true,
@@ -131,6 +182,45 @@ class productController {
                 data: product
             });
         } catch (err) {
+            return res.json({
+                status: false,
+                message: "Exception",
+                exception: err.message
+            })
+        }
+    }
+
+    //c14
+    async createProduct(req, res) {
+        let t
+        try {
+            t = await sequelize.transaction();
+            let product = await Product.create({
+                title: req.body.title,
+                trademarkId: req.body.trademarkId,
+                image: req.body.image,
+                shortDescription: req.body.shortDescription,
+                detailDescription: req.body.detailDescription,
+                displayStatus: req.body.displayStatus
+            }, {transaction: t});
+            console.log(product.id)
+            let product_class = await Product_class.create({
+                productId: product.id,
+                price: req.body.class[0].price,
+                displayStatus: req.body.class[0].displayStatus
+            }, {transaction: t})
+            let productClass_PropertyVal = await ProductClass_PropertyVal.create({
+                productClassId: product_class.id,
+                propValId: req.body.propValId
+            },{transaction: t})
+            await t.commit();
+            return res.json({
+                status: true,
+                message: "Success",
+                data: [product, product_class]
+            })
+        } catch (err) {
+            if (t) await t.rollback();
             return res.json({
                 status: false,
                 message: "Exception",

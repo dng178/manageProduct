@@ -14,12 +14,12 @@ let proClassController = new ProClassController()
 function setRoute(app) {
 
     //product
-    app.get("/product", function (req, res) {
+    app.get("/product/all", function (req, res) {
         productController.getAll(req, res)
     })
 
     app.post("/product/create", function (req, res) {
-        productController.post(req, res)
+        productController.createProduct(req, res)
     })
 
     // //find by Id
@@ -128,6 +128,8 @@ function setRoute(app) {
     app.get("/product_class/search", function (req, res) {
         proClassController.getSearch(req, res)
     })
+
+    //
 }
 
 module.exports = setRoute
