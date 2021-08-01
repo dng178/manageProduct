@@ -5,10 +5,10 @@ const Categories = require("../Models/categories")
 const Trademark = require("../Models/trademark")
 const Properties = require("../Models/properties")
 const ProductClass_PropertyVal = require("../Models/productClass_propertyVal")
-const {Op} = require("sequelize");
-const {Sequelize} = require("sequelize");
+const Pro_cat = require("../Models/pro_cat")
+const {Op, where} = require("sequelize");
 const sequelize = require("../Connection/sequelize_mysql");
-const Product_Class = require("../Models/product_class");
+
 
 class productController {
     constructor() {
@@ -84,14 +84,14 @@ class productController {
                             exclude: ['create_at', 'update_at', 'propertiesId'],
                         },
                         through: {attributes: []},
-                        include:[{
+                        include: [{
                             model: Properties,
                             attributes: {
                                 exclude: ['create_at', 'update_at'],
                             },
                         }]
                     }],
-                    where:{
+                    where: {
                         id: product_classId
                     }
                 }]
@@ -167,7 +167,7 @@ class productController {
                             exclude: ['create_at', 'update_at', 'propertiesId'],
                         },
                         through: {attributes: []},
-                        include:[{
+                        include: [{
                             model: Properties,
                             attributes: {
                                 exclude: ['create_at', 'update_at'],
@@ -209,15 +209,156 @@ class productController {
                 price: req.body.class[0].price,
                 displayStatus: req.body.class[0].displayStatus
             }, {transaction: t})
-            let productClass_PropertyVal = await ProductClass_PropertyVal.create({
-                productClassId: product_class.id,
-                propValId: req.body.propValId
-            },{transaction: t})
+            let product_propertyVal = await ProductClass_PropertyVal.findAll({
+                where: {propValId: req.body.propValId},
+                transaction: t
+            })
+
+            const productClass_propertyVal = await req.body.propValId.map(data => data);
+            console.log(productClass_propertyVal)
+            await productClass_propertyVal.forEach(propId =>
+                    ProductClass_PropertyVal.create({
+                        productClassId: product_class.id,
+                        propValId: propId
+                    })
+                , {transaction: t})
             await t.commit();
             return res.json({
                 status: true,
                 message: "Success",
-                data: [product, product_class]
+                data: [product, product_class, productClass_propertyVal]
+            })
+        } catch (err) {
+            if (t) await t.rollback();
+            return res.json({
+                status: false,
+                message: "Exception",
+                exception: err.message
+            })
+        }
+    }
+
+    //C15
+    async addProductCategories(req, res) {
+
+        try {
+            const body = req.body
+            const categoriesId = body.categoriesId
+            const productId = body.productId
+
+            function isIdUnique(id, id2) {
+                return Pro_cat.count({
+                    where: {
+                        [Op.and]: [{categoriesId: id}, {productId: id2}]
+                    }
+                }).then(count => {
+                    if (count != 0) {
+                        return false;
+                    }
+                    return true;
+                });
+            }
+
+            productId.forEach(proId =>
+                categoriesId.forEach(catId =>
+                    isIdUnique(catId, proId).then(isUnique => {
+                        console.log(isUnique)
+                        if (isUnique) {
+                            Pro_cat.create({
+                                categoriesId: catId,
+                                productId: proId
+                            })
+                        } else {
+                            console.log("Product ID:" + proId + " Categories ID:" + catId + " already exists")
+                        }
+                    })
+                )
+            )
+            return res.json({
+                status: true,
+                message: "Success",
+                data: [productId, categoriesId]
+            })
+        } catch (err) {
+
+            return res.json({
+                status: false,
+                message: "Exception",
+                exception: err.message
+            })
+        }
+    }
+
+    //c17
+    async updateProduct(req, res) {
+        let t
+        try {
+            t = await sequelize.transaction();
+
+            let product = await Product.update( {
+                title: req.body.title,
+                trademarkId: req.body.trademarkId,
+                // image: req.body.image,
+                // shortDescription: req.body.shortDescription,
+                // detailDescription: req.body.detailDescription,
+                // displayStatus: req.body.displayStatus,
+            },{
+                where: {
+                    id: req.body.product_id,
+                },
+                transaction: t
+            });
+            let trademark = await Trademark.update( {
+                name: req.body.trademark[0].name,
+            },{
+                where: {
+                    id: req.body.trademarkId
+                    // logo: req.body.trademark[0].logo,
+                    // country: req.body.trademark[0].country,
+                },
+                transaction: t
+            });
+            // console.log(product.trademarkId)
+            let productClass = await Product_class.update( {
+                price: req.body.class[0].price,
+                displayStatus: req.body.class[0].displayStatus,
+            },{
+                where: {
+                    productId: req.body.product_id
+                },
+                transaction: t
+            });
+            let pro_cat = await Pro_cat.findOne({
+                where: {productId: req.body.product_id},
+                transaction: t
+            })
+            // console.log( pro_cat)
+            let category = await Categories.update(
+                {
+                    name: req.body.category[0].name,
+                },{
+                    where: {
+                        id: pro_cat.categoriesId
+                    },
+                    transaction: t
+                })
+            let getProduct = await Product.findAll({
+                where: {id: req.body.product_id},
+                include: [{
+                    model: Trademark,
+                },{
+                    model: Product_class,
+                },{
+                    model: Categories,
+                    as: "categories",
+                    through:{attributes:[]}
+                }]
+            })
+            await t.commit();
+            return res.json({
+                status: true,
+                message: "Success",
+                data: getProduct
             })
         } catch (err) {
             if (t) await t.rollback();

@@ -13,6 +13,7 @@ let proClassController = new ProClassController()
 
 function setRoute(app) {
 
+    //c18
     //product
     app.get("/product/all", function (req, res) {
         productController.getAll(req, res)
@@ -22,10 +23,19 @@ function setRoute(app) {
         productController.createProduct(req, res)
     })
 
-    // //find by Id
-    // app.get("/product/:id",function (req, res){
-    //     productController.findbyId( req, res)
-    // })
+    //c16
+    //find by Id
+    app.get("/product/:id",function (req, res){
+        productController.findbyId( req, res)
+    })
+
+    app.post("/product/addCategories",function (req, res){
+        productController.addProductCategories( req, res)
+    })
+
+    app.put("/product/update",function (req, res){
+        productController.updateProduct( req, res)
+    })
 
     //C1
     app.get("/product/count", function (req, res) {

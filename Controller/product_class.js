@@ -266,8 +266,8 @@ class proClassController {
     async post(req, res) {
         try {
             let product_class = await Product_Class.create({
-                id: req.body.id,
-                SKU: req.body.SKU,
+                // id: req.body.id,
+                // SKU: req.body.SKU,
                 productId: req.body.productId,
                 propertiesId: req.body.propertiesId,
                 price: req.body.price,
@@ -526,17 +526,11 @@ class proClassController {
             let limit = parseInt(req.query.limit);
             const offset = page ? (page - 1) * limit : 0;
             const id = req.body.category_id;
-            // const displayStatus = req.body.displayStatus;
             let getCategory = await Product_Class.findAll({
                 include: [{
                     model: Product,
                     as: "product",
                     required: true,
-                    // include: [{
-                    //     model: Categories,
-                    //     as: "categories",
-                    //     through: {attributes: []},
-                    // }],
                 }],
                 replacements: [id],
                 where: {
