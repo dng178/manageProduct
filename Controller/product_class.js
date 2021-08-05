@@ -449,77 +449,6 @@ class proClassController {
 
     //c9
 
-    // async getProductClassPage(req, res) {
-    //     try {
-    //         let page = parseInt(req.query.page);
-    //         let limit = parseInt(req.query.limit);
-    //         const offset = page ? (page - 1) * limit : 0;
-    //         const id = req.body.category_id;
-    //         const displayStatus = req.body.displayStatus;
-    //         let getCategory = await Product_Class.findAndCountAll({
-    //             attributes: ["id"],
-    //             include: [{
-    //                 model: Product,
-    //                 as: "product",
-    //                 required: true,
-    //                 attributes: ['id'],
-    //                 include: [{
-    //                     model: Categories,
-    //                     as: "categories",
-    //                     attributes: ['id'],
-    //                     through: {attributes: []},
-    //                 }],
-    //             }],
-    //         })
-    //
-    //         let product_class = await Product_Class.findAndCountAll({
-    //             distinct: true,
-    //             limit: limit,
-    //             offset: offset,
-    //             include: [{
-    //                 model: Product,
-    //                 as: "product",
-    //                 required: true,
-    //                 include: [{
-    //                     model: Categories,
-    //                     as: "categories",
-    //                     through: {attributes: []},
-    //                 }],
-    //             }],
-    //             replacements: [id, displayStatus],
-    //
-    //             where: {
-    //                 [Op.and]: Sequelize.literal('exists (SELECT product_class.id\n' +
-    //                     'FROM pro_cat as pcat \n' +
-    //                     'inner JOIN \n' +
-    //                     'categories as c ON pcat.categoriesId = c.id  where\n' +
-    //                     'product.id = pcat.productId and ( c.id in (?)) and product_class.displayStatus = ?)')
-    //             }
-    //         }).then(data => {
-    //             const response = {
-    //                 message: "page = " + page + ", limit = " + limit,
-    //                 data: {
-    //                     "totalItems": data.count,
-    //                     "totalPages": Math.ceil(data.count / limit),
-    //                     "limit": limit,
-    //                     "offset": offset,
-    //                     "currentPageNumber": page,
-    //                     "currentPageSize": data.rows.length,
-    //                     "product_class": data.rows,
-    //
-    //                 }
-    //             };
-    //             res.send(response);
-    //         });
-    //     } catch (err) {
-    //         return res.json({
-    //             status: false,
-    //             message: "Exception",
-    //             exception: err.message
-    //         })
-    //     }
-    // }
-
     async getProductClassPage(req, res) {
         try {
             let page = parseInt(req.query.page);
@@ -591,17 +520,7 @@ class proClassController {
     //C10
     async createBulk(req, res) {
         try {
-            // const data = req.body.data
-            // for (var i = 0; i < data.length; i++) {
-            //     console.log(i)
-            //     console.log(req.body.data[i]);
-            //     let product_class = await Product_Class.create([{
-            //         productId: req.body.data[i].productId,
-            //         price: req.body.data[i].price,
-            //         displayStatus: req.body.data[i].displayStatus
-            //     },
-            //     ])
-            // }
+
             const product_class = req.body.data.map(data => {
                 return {
                     productId: data.productId,
@@ -743,6 +662,7 @@ class proClassController {
         }
     }
 
+    //c13
     async getSearch(req, res) {
 
         try {
@@ -769,7 +689,7 @@ class proClassController {
                 where: {
                     displayStatus: req.body.displayStatus,
                     [Op.or]: [
-                        {SKU: {[Op.like]: `%${req.body.searchQuery1}%` }}
+                        {SKU: {[Op.like]: '%' + req.body.searchQuery1 + '%' }}
                     ]
 
                 }

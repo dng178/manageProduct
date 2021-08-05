@@ -149,37 +149,26 @@ class productController {
     //get all and count product with clothes category and with properties values
     async findbyId(req, res) {
         try {
-            let product = await Product.findByPk(req.params.id, {
-
-                attributes: {exclude: ['create_at', 'update_at']},
+            let product_class = await Product_class.findByPk(req.params.productId, {
+                attributes: {exclude: ['create_at', 'update_at', 'displayStatus', 'price', 'productId', 'SKU', 'id']},
                 include: [{
-                    model: Categories,
-                    as: "categories",
-                    through: {attributes: []}
-                }, {
-                    model: Trademark,
-                }, {
-                    model: Product_class,
-                    attributes: {exclude: ['create_at', 'update_at', 'categoryName', 'productTitle']},
+                    model: Property_value,
+                    attributes: {
+                        exclude: ['create_at', 'update_at', 'propertiesId'],
+                    },
+                    through: {attributes: []},
                     include: [{
-                        model: Property_value,
+                        model: Properties,
                         attributes: {
-                            exclude: ['create_at', 'update_at', 'propertiesId'],
+                            exclude: ['create_at', 'update_at'],
                         },
-                        through: {attributes: []},
-                        include: [{
-                            model: Properties,
-                            attributes: {
-                                exclude: ['create_at', 'update_at'],
-                            },
-                        }]
-                    }],
-                }],
+                    }]
+                }]
             })
             return res.json({
                 status: true,
                 message: "success",
-                data: product
+                data: product_class
             });
         } catch (err) {
             return res.json({
@@ -194,7 +183,8 @@ class productController {
     async createProduct(req, res) {
         let t
         try {
-            t = await sequelize.transaction();
+            const cf = req.body.cf
+            // t = await sequelize.transaction();
             let product = await Product.create({
                 title: req.body.title,
                 trademarkId: req.body.trademarkId,
@@ -202,34 +192,34 @@ class productController {
                 shortDescription: req.body.shortDescription,
                 detailDescription: req.body.detailDescription,
                 displayStatus: req.body.displayStatus
-            }, {transaction: t});
-            console.log(product.id)
+            })
+
+        if(cf == "yes") {
             let product_class = await Product_class.create({
                 productId: product.id,
                 price: req.body.class[0].price,
                 displayStatus: req.body.class[0].displayStatus
-            }, {transaction: t})
+            })
             let product_propertyVal = await ProductClass_PropertyVal.findAll({
                 where: {propValId: req.body.propValId},
-                transaction: t
             })
-
+            let pc =[]
             const productClass_propertyVal = await req.body.propValId.map(data => data);
             console.log(productClass_propertyVal)
             await productClass_propertyVal.forEach(propId =>
-                    ProductClass_PropertyVal.create({
+                     pc = ProductClass_PropertyVal.create({
                         productClassId: product_class.id,
                         propValId: propId
-                    })
-                , {transaction: t})
-            await t.commit();
+                    }))
+            return pc
+        }
+
             return res.json({
                 status: true,
                 message: "Success",
-                data: [product, product_class, productClass_propertyVal]
+                data: [product]
             })
         } catch (err) {
-            if (t) await t.rollback();
             return res.json({
                 status: false,
                 message: "Exception",
@@ -259,25 +249,47 @@ class productController {
                 });
             }
 
-            productId.forEach(proId =>
-                categoriesId.forEach(catId =>
-                    isIdUnique(catId, proId).then(isUnique => {
-                        console.log(isUnique)
-                        if (isUnique) {
-                            Pro_cat.create({
-                                categoriesId: catId,
-                                productId: proId
-                            })
-                        } else {
-                            console.log("Product ID:" + proId + " Categories ID:" + catId + " already exists")
-                        }
+            // productId.forEach( (proId) =>
+            //     categoriesId.forEach( (catId) =>
+            // for(let proId of productId) {
+            //     for (let catId of categoriesId) {
+            //         isIdUnique(catId, proId).then(isUnique => {
+            //             console.log(isUnique)
+            //             if (isUnique) {
+            //                 const pc = Pro_cat.create({
+            //                     categoriesId: catId,
+            //                     productId: proId
+            //                 })
+            //             } else {
+            //                 console.log("Product ID:" + proId + " Categories ID:" + catId + " already exists")
+            //             }
+            //         })
+            //         //     )
+            //         // )
+            //     }
+            // }
+
+            const promise4all = await Promise.all(
+                productId.map(proId => {
+                    return Promise.all(categoriesId.map(catId => {
+                        isIdUnique(catId, proId).then(isUnique => {
+                            console.log(isUnique)
+                            if (isUnique) {
+                                return Pro_cat.create({
+                                    categoriesId: catId,
+                                    productId: proId
+                                })
+                            } else {
+                                return console.log("Product ID:" + proId + " Categories ID:" + catId + " already exists")
+                            }
                     })
-                )
+                }))
+                })
             )
             return res.json({
                 status: true,
                 message: "Success",
-                data: [productId, categoriesId]
+                data: [productId,categoriesId]
             })
         } catch (err) {
 
@@ -298,27 +310,12 @@ class productController {
             let product = await Product.update( {
                 title: req.body.title,
                 trademarkId: req.body.trademarkId,
-                // image: req.body.image,
-                // shortDescription: req.body.shortDescription,
-                // detailDescription: req.body.detailDescription,
-                // displayStatus: req.body.displayStatus,
             },{
                 where: {
                     id: req.body.product_id,
                 },
                 transaction: t
             });
-            let trademark = await Trademark.update( {
-                name: req.body.trademark[0].name,
-            },{
-                where: {
-                    id: req.body.trademarkId
-                    // logo: req.body.trademark[0].logo,
-                    // country: req.body.trademark[0].country,
-                },
-                transaction: t
-            });
-            // console.log(product.trademarkId)
             let productClass = await Product_class.update( {
                 price: req.body.class[0].price,
                 displayStatus: req.body.class[0].displayStatus,
@@ -328,17 +325,12 @@ class productController {
                 },
                 transaction: t
             });
-            let pro_cat = await Pro_cat.findOne({
-                where: {productId: req.body.product_id},
-                transaction: t
-            })
-            // console.log( pro_cat)
-            let category = await Categories.update(
+            let pro_cat = await Pro_cat.update(
                 {
-                    name: req.body.category[0].name,
+                    categoriesId: req.body.proCat[0].categoriesId,
                 },{
                     where: {
-                        id: pro_cat.categoriesId
+                        productId: req.body.product_id
                     },
                     transaction: t
                 })

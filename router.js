@@ -25,7 +25,7 @@ function setRoute(app) {
 
     //c16
     //find by Id
-    app.get("/product/:id",function (req, res){
+    app.get("/product/:productId",function (req, res){
         productController.findbyId( req, res)
     })
 
