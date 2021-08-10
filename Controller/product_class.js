@@ -676,20 +676,26 @@ class proClassController {
                         model: Categories,
                         as: "categories",
                         through: {attributes: []},
+                        // where: {
+                        //     id: req.body.category_id
+                        // }
                         where: {
-                            id: req.body.category_id
+                            [Op.or]: [
+                                {id: {[Op.like]: '%' + req.body.category_id + '%'}}
+                            ]
                         }
                     }],
                     where: {
                         [Op.or]: [
-                            {title: {[Op.like]: '%' + req.body.searchQuery + '%'}}
+                            {title: {[Op.like]: '%' + req.body.title + '%'}}
                         ]
                     }
                 }],
                 where: {
-                    displayStatus: req.body.displayStatus,
-                    [Op.or]: [
-                        {SKU: {[Op.like]: '%' + req.body.searchQuery1 + '%' }}
+                    // displayStatus: req.body.displayStatus,
+                    [Op.and]: [
+                        {SKU: {[Op.like]: '%' + req.body.SKU + '%' }},
+                        {displayStatus: {[Op.like]: '%' + req.body.displayStatus + '%' }}
                     ]
 
                 }

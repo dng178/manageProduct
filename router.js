@@ -19,6 +19,7 @@ function setRoute(app) {
         productController.getAll(req, res)
     })
 
+    //c14
     app.post("/product/create", function (req, res) {
         productController.createProduct(req, res)
     })
