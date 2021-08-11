@@ -676,9 +676,7 @@ class proClassController {
                         model: Categories,
                         as: "categories",
                         through: {attributes: []},
-                        // where: {
-                        //     id: req.body.category_id
-                        // }
+
                         where: {
                             [Op.or]: [
                                 {id: {[Op.like]: '%' + req.body.category_id + '%'}}
@@ -692,7 +690,6 @@ class proClassController {
                     }
                 }],
                 where: {
-                    // displayStatus: req.body.displayStatus,
                     [Op.and]: [
                         {SKU: {[Op.like]: '%' + req.body.SKU + '%' }},
                         {displayStatus: {[Op.like]: '%' + req.body.displayStatus + '%' }}

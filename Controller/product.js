@@ -184,11 +184,14 @@ class productController {
                     through: {attributes: []},
                     include: [{
                         model: Properties,
+
                         attributes: {
                             exclude: ['create_at', 'update_at'],
                         },
-                    }]
-                }]
+
+                    }],
+                }],
+                order: [[{model: Property_value}, {model: Properties},'id']]
             })
             return res.json({
                 status: true,
@@ -274,59 +277,35 @@ class productController {
             const arr = []
 
             async function isIdUnique(id, id2) {
-                return await Pro_cat.count({
+                return await Pro_cat.findOne({
                     where: {
                         [Op.and]: [{categoriesId: id}, {productId: id2}]
                     }
-                }).then(count => {
-                    if (count != 0) {
-                        return false;
+                }).then(data => {
+                    if (data != null) {
+                        return console.log("Product ID:" + id2 + " Categories ID:" + id + " already exists");
                     }
-                    return true;
+                    return arr.push({
+                        product_id: id2,
+                        category_id: id
+                    });
+
                 });
             }
 
-
-            let get_pro_cat = await Pro_cat.findAll({
-                where: {
-                    [Op.and]: [{categoriesId: categoriesId}, {productId: productId}]
-                }
-            }).then(data => {
-                console.log(data)
-            })
-            // let getArr = get_pro_cat.map(data => data)
-
-
-            const control = async _ => {
                 for (let proId of productId) {
                     for (let catId of categoriesId) {
-                        isIdUnique(catId, proId).then(async isUnique => {
-                            if (isUnique) {
-                                arr.push({
-                                    product_id: proId,
-                                    category_id: catId
-                                })
-
-                            } else {
-                                // console.log("Product ID:" + proId + " Categories ID:" + catId + " already exists")
-
-                            }
-                        })
+                        await isIdUnique(catId, proId)
                     }
                 }
-            }
-            //     await getArr();
-            // console.log(arr)
-            // await Pro_cat.bulkCreate({
-            //     productId: arr.product_id,
-            //     categoriesId: arr.category_id
-            // });
 
-            await Pro_cat.bulkCreate({
-                productId: arr.product_id,
-                categoriesId: arr.category_id
+            const get_pro_class = arr.map(data => {
+                return {
+                    productId: data.product_id,
+                    categoriesId: data.category_id
+                }
             });
-
+            const pro_cat = await Pro_cat.bulkCreate(get_pro_class);
 
             // const promise4all = await Promise.all(
             //     productId.map(proId => {
@@ -346,11 +325,10 @@ class productController {
             //     })
             // )
 
-
             return res.json({
                 status: true,
                 message: "Success",
-                data: get_pro_cat
+                data: pro_cat
             })
         } catch (err) {
 
