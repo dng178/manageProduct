@@ -666,7 +666,11 @@ class proClassController {
     async getSearch(req, res) {
 
         try {
-
+            let body = req.body;
+            let category_id = body.category_id;
+            let title = body.title;
+            let sku = body.SKU;
+            let displayStatus = body.displayStatus;
             let getCategory = await Product_Class.findAll({
                 include: [{
                     model: Product,
@@ -676,24 +680,11 @@ class proClassController {
                         model: Categories,
                         as: "categories",
                         through: {attributes: []},
-
-                        where: {
-                            [Op.or]: [
-                                {id: {[Op.like]: '%' + req.body.category_id + '%'}}
-                            ]
-                        }
                     }],
-                    where: {
-                        [Op.or]: [
-                            {title: {[Op.like]: '%' + req.body.title + '%'}}
-                        ]
-                    }
                 }],
                 where: {
-                    [Op.and]: [
-                        {SKU: {[Op.like]: '%' + req.body.SKU + '%' }},
-                        {displayStatus: {[Op.like]: '%' + req.body.displayStatus + '%' }}
-                    ]
+                    [Op.in]: Sequelize.literal('(product_class.SKU LIKE \'%'+ sku +'%\' and product.title LIKE \'%'+ title +'%\' ' +
+                        'and product_class.displayStatus LIKE \'%'+ displayStatus +'%\' and `product->categories`.`id` LIKE  \'%'+ category_id +'%\')')
 
                 }
             })
