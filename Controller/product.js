@@ -237,20 +237,52 @@ class productController {
 
                 const productClass_propertyVal = await req.body.propValId.map(data => data);
 
-                let count = 0
+                // let count = 0
+                // for (let product_class_id of get_product_class_id) {
+                //     for (let proclass_property_id of productClass_propertyVal) {
+                //         if (count == req.body.propValId.lenght) {
+                //             break
+                //         } else {
+                //             await ProductClass_PropertyVal.create({
+                //                 productClassId: product_class_id,
+                //                 propValId: proclass_property_id
+                //             })
+                //             count++
+                //         }
+                //     }
+                // }
+
+                const arr = []
+                async function isIdUnique(id, id2) {
+                    return await ProductClass_PropertyVal.findOne({
+                        where: {
+                            [Op.and]: [{productClassId: id}, {propValId: id2}]
+                        }
+                    }).then(data => {
+                        if (data != null) {
+                            return console.log("product Class ID:" + id + " propValId:" + id2 + " already exists");
+                        }
+                        return arr.push({
+                            productClassId: id,
+                            propValId: id2
+                        });
+
+                    });
+                }
+
                 for (let product_class_id of get_product_class_id) {
                     for (let proclass_property_id of productClass_propertyVal) {
-                        if (count == req.body.propValId.lenght) {
-                            break
-                        } else {
-                            await ProductClass_PropertyVal.create({
-                                productClassId: product_class_id,
-                                propValId: proclass_property_id
-                            })
-                            count++
-                        }
+                        await isIdUnique(product_class_id, proclass_property_id)
                     }
                 }
+
+                const get_proclass_property = arr.map(data => {
+                    return {
+                        productClassId: data.productClassId,
+                        propValId: data.propValId
+                    }
+                });
+                const pro_class_property = await ProductClass_PropertyVal.bulkCreate(get_proclass_property);
             }
 
             return res.json({
